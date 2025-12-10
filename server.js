@@ -6,7 +6,13 @@ const dotenv = require("dotenv");
 dotenv.config();
 
 const app = express();
-app.use(cors());
+
+// Allow frontend origins
+app.use(cors({
+  origin: "*",  // Allow all frontend hosts
+  methods: ["GET", "POST"],
+}));
+
 app.use(express.json());
 
 app.post("/api/send-mail", async (req, res) => {
@@ -16,12 +22,11 @@ app.post("/api/send-mail", async (req, res) => {
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
+        user: process.env.EMAIL_USER,  // your email
+        pass: process.env.EMAIL_PASS   // app password
       }
     });
 
-    // Email Content
     await transporter.sendMail({
       from: email,
       to: process.env.EMAIL_USER,
@@ -33,17 +38,20 @@ app.post("/api/send-mail", async (req, res) => {
       `
     });
 
-    res.json({ success: true, msg: "Mail sent!" });
+    res.json({ success: true, msg: "Mail sent successfully!" });
   } catch (err) {
-    res.json({ success: false, msg: "Email failed", error: err });
+    console.error("Email Error:", err);
+    res.status(500).json({ success: false, msg: "Email failed", error: err });
   }
 });
 
-// Default Route
+// Test Route
 app.get("/", (req, res) => {
-  res.send("Backend is running...");
+  res.send("Backend is running properly...");
 });
 
-// PORT
+// Server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () =>
+  console.log(`Server running on http://localhost:${PORT}`)
+);
